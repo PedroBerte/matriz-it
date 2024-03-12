@@ -33,6 +33,20 @@ export class MatrizBodyComponent {
     if (this.currentLenght == this.minLenght) this.isLeftArrowDisabled = true;
   }
 
+  handleStartMatriz(){
+    this.currentHeight = 1;
+    this.currentLenght = 1;
+    this.matriz.forEach((element) => {
+      element.push(0);
+    });
+    this.currentLenght++;
+
+    for(let i = 0; i < 2; i++){
+      this.handleIncrementHorizontal();
+      this.handleIncrementVertical();
+    }
+  }
+
   handleIncrementHorizontal() {
     const matrizLenght = this.matriz[0].length;
     if (matrizLenght >= this.maxLenght) return;

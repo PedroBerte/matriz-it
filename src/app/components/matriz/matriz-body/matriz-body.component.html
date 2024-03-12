@@ -1,5 +1,5 @@
-<div class="flex flex-row">
-  <ng-container *ngIf="currentHeight > 0 || currentLenght > 0; else templateA">
+<div class="flex flex-row justify-center ">
+  <ng-container *ngIf="currentHeight > 0 || currentLenght > 0; else startButtonContainer">
     <div class="body flex flex-row">
       <div>
         <div
@@ -7,7 +7,7 @@
           *ngFor="let line of matriz"
         >
           <div class="mt-3" *ngFor="let item of line">
-            <app-input-cell item="{{ item }}" />
+            <app-input-cell value="{{ item }}" />
           </div>
         </div>
         <div class="flex gap-5 w-full items-center justify-center mt-4 h-8">
@@ -39,5 +39,5 @@
       </div>
     </div>
   </ng-container>
-  <ng-template #templateA>  </ng-template>
+  <ng-template #startButtonContainer class="flex items-center justify-center"><app-button (click)="handleStartMatriz()" /></ng-template>
 </div>
