@@ -1,11 +1,18 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
+import { MatrizService } from '../../../services/matriz.service';
 
 @Component({
   selector: 'app-matriz-body',
   templateUrl: './matriz-body.component.html',
 })
-export class MatrizBodyComponent {
-  @Input() matriz: Array<number[]> = [[]];
+export class MatrizBodyComponent implements OnInit {
+  matriz: number[][] = [[]];
+
+  constructor(private matrizService: MatrizService) {}
+
+  ngOnInit(): void {
+    this.matriz = this.matrizService.getMatriz();
+  }
 
   maxHeight = 10;
   maxLenght = 10;
@@ -21,83 +28,55 @@ export class MatrizBodyComponent {
   isDownArrowDisabled = false;
   isUpArrowDisabled = false;
 
-  checkButton() {
+  disableAllArrows() {
     this.isRightArrowDisabled = false;
     this.isLeftArrowDisabled = false;
     this.isDownArrowDisabled = false;
     this.isUpArrowDisabled = false;
-
-    if (this.currentHeight == this.maxHeight) this.isDownArrowDisabled = true;
-    if (this.currentHeight == this.minHeight) this.isUpArrowDisabled = true;
-    if (this.currentLenght == this.maxLenght) this.isRightArrowDisabled = true;
-    if (this.currentLenght == this.minLenght) this.isLeftArrowDisabled = true;
   }
 
-  handleStartMatriz(){
-    this.currentHeight = 1;
-    this.currentLenght = 1;
-    this.matriz.forEach((element) => {
-      element.push(0);
-    });
-    this.currentLenght++;
+  checkButton() {
+    this.disableAllArrows();
+    if (this.currentHeight >= this.maxHeight) this.isDownArrowDisabled = true;
 
-    for(let i = 0; i < 2; i++){
-      this.handleIncrementHorizontal();
-      this.handleIncrementVertical();
-    }
+    if (this.currentHeight <= this.minHeight) this.isUpArrowDisabled = true;
+
+    if (this.currentLenght >= this.maxLenght) this.isRightArrowDisabled = true;
+
+    if (this.currentLenght <= this.minLenght) this.isLeftArrowDisabled = true;
   }
 
-  handleIncrementHorizontal() {
-    const matrizLenght = this.matriz[0].length;
-    if (matrizLenght >= this.maxLenght) return;
-    this.matriz.forEach((element) => {
-      element.push(0);
-    });
-    this.currentLenght++;
-  }
-
-  handleIncrementVertical() {
-    const matrizLenght = this.matriz[0].length;
-    const matrizHeight = this.matriz.length;
-    if (matrizHeight >= this.maxHeight) return;
-    let newRow = [];
-    for (var i = 0; i < matrizLenght; i++) {
-      newRow.push(0);
-    }
-    this.matriz.push(newRow);
-    this.currentHeight++;
-  }
-
-  handleDecrementHorizontal() {
-    const matrizLenght = this.matriz[0].length;
-    if (matrizLenght === this.minLenght) return;
-    console.log(matrizLenght, this.maxLenght);
-    this.matriz.forEach((element) => {
-      element.pop();
-    });
-    this.currentLenght--;
-  }
-
-  handleDecrementVertical() {
-    const matrizHeight = this.matriz.length;
-    if (matrizHeight === this.minHeight) return;
-    this.matriz.pop();
-    this.currentHeight--;
+  handleStartMatriz() {
+    this.matrizService.startMatriz(2);
+    this.currentHeight = 2;
+    this.currentLenght = 2;
   }
 
   handleSizeChange(direction: string) {
     switch (direction) {
       case 'arrow-up':
-        this.handleDecrementVertical();
+        if (this.isUpArrowDisabled) return;
+
+        this.matrizService.decrementVertical();
+        this.currentHeight = this.currentHeight - 1;
         break;
       case 'arrow-down':
-        this.handleIncrementVertical();
+        if (this.isDownArrowDisabled) return;
+
+        this.matrizService.incrementVertical();
+        this.currentHeight = this.currentHeight + 1;
         break;
       case 'arrow-left':
-        this.handleDecrementHorizontal();
+        if (this.isLeftArrowDisabled) return;
+
+        this.matrizService.decrementHorizontal();
+        this.currentLenght = this.currentLenght - 1;
         break;
       case 'arrow-right':
-        this.handleIncrementHorizontal();
+        if (this.isRightArrowDisabled) return;
+
+        this.matrizService.incrementHorizontal();
+        this.currentLenght = this.currentLenght + 1;
         break;
     }
     this.checkButton();

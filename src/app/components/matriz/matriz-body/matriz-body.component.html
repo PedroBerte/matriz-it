@@ -1,5 +1,7 @@
-<div class="flex flex-row justify-center ">
-  <ng-container *ngIf="currentHeight > 0 || currentLenght > 0; else startButtonContainer">
+<div class="flex flex-row justify-center">
+  <ng-container
+    *ngIf="currentHeight > 0 || currentLenght > 0; else startButtonContainer"
+  >
     <div class="body flex flex-row">
       <div>
         <div
@@ -39,5 +41,7 @@
       </div>
     </div>
   </ng-container>
-  <ng-template #startButtonContainer class="flex items-center justify-center"><app-button (click)="handleStartMatriz()" /></ng-template>
+  <ng-template #startButtonContainer class="flex items-center justify-center"
+    ><app-button (click)="handleStartMatriz()"
+  /></ng-template>
 </div>
