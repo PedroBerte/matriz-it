@@ -13,16 +13,16 @@ import { ClassificationsComponent } from './pages/classifications/classification
 import { OperationsComponent } from './pages/operations/operations.component';
 import { HomeComponent } from './pages/home/home.component';
 import { NavCardComponent } from './pages/home/nav-card/nav-card.component';
-import { InputCellComponent } from './components/matriz/matriz-body/input-cell/input-cell.component';
 import { ClassificatorComponent } from './components/classificator/classificator.component';
 import { ClassificatorBadgeComponent } from './components/classificator/classificator-badge/classificator-badge.component';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
     AppComponent,
     ButtonComponent,
     HeaderComponent,
-    InputCellComponent,
     MatrizComponent,
     MatrizHeaderComponent,
     MatrizBodyComponent,
@@ -32,13 +32,16 @@ import { ClassificatorBadgeComponent } from './components/classificator/classifi
     HomeComponent,
     NavCardComponent,
     ClassificatorComponent,
-    ClassificatorBadgeComponent
+    ClassificatorBadgeComponent,
   ],
   imports: [
     BrowserModule,
-    AppRoutingModule
+    AppRoutingModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CommonModule,
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}

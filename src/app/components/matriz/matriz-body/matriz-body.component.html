@@ -4,14 +4,28 @@
   >
     <div class="body flex flex-row">
       <div>
-        <div
+        <form
+          [formGroup]="matrizForm"
           class="flex gap-3 items-center justify-center"
-          *ngFor="let line of matriz"
         >
-          <div class="mt-3" *ngFor="let item of line">
-            <app-input-cell value="{{ item }}" />
+          <div *ngFor="let line of matriz; let lineIndex = index">
+            <div class="mt-3" *ngFor="let item of line; let colIndex = index">
+              <input
+                class="w-11 h-11 flex text-2xl rounded-lg font-semibold text-white text-center"
+                type="text"
+                [ngClass]="{
+                  'bg-red-500': inputCell?.errors && inputCell?.touched,
+                  'bg-zinc-700': inputCell?.valid
+                }"
+                (keydown.enter)="focusNextInput($event, lineIndex, colIndex)"
+                formControlName="inputCell"
+                [attr.data-line]="lineIndex"
+                [attr.data-col]="colIndex"
+              />
+            </div>
           </div>
-        </div>
+        </form>
+
         <div class="flex gap-5 w-full items-center justify-center mt-4 h-8">
           <app-arrows
             [isDisabled]="isUpArrowDisabled"

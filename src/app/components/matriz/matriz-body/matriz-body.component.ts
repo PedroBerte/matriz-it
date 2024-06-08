@@ -1,5 +1,14 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
 import { MatrizService } from '../../../services/matriz.service';
+import {
+  FormBuilder,
+  Validators,
+  FormGroup,
+  ValidatorFn,
+  AbstractControl,
+  ValidationErrors,
+  FormArray,
+} from '@angular/forms';
 
 @Component({
   selector: 'app-matriz-body',
@@ -7,12 +16,6 @@ import { MatrizService } from '../../../services/matriz.service';
 })
 export class MatrizBodyComponent implements OnInit {
   matriz: number[][] = [[]];
-
-  constructor(private matrizService: MatrizService) {}
-
-  ngOnInit(): void {
-    this.matriz = this.matrizService.getMatriz();
-  }
 
   maxHeight = 10;
   maxLenght = 10;
@@ -27,6 +30,50 @@ export class MatrizBodyComponent implements OnInit {
   isLeftArrowDisabled = false;
   isDownArrowDisabled = false;
   isUpArrowDisabled = false;
+
+  matrizForm: FormGroup;
+
+  constructor(
+    private matrizService: MatrizService,
+    private formBuilder: FormBuilder,
+    private elRef: ElementRef
+  ) {
+    this.matrizForm = this.formBuilder.group({
+      inputCell: ['0', [Validators.required, this.onlyNumbersValidator()]],
+    });
+  }
+
+  ngOnInit(): void {
+    this.matriz = this.matrizService.getMatriz();
+  }
+
+  get inputCell() {
+    return this.matrizForm.get('inputCell');
+  }
+
+  onlyNumbersValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const isValid = /^[0-9]+$/.test(control.value);
+      return isValid ? null : { onlyNumbers: true };
+    };
+  }
+
+  focusNextInput(event: any, lineIndex: number, colIndex: number) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+
+      if (lineIndex + 1 > this.currentLenght) {
+        colIndex++;
+        lineIndex = -1;
+      }
+
+      const nextInput = this.elRef.nativeElement.querySelector(
+        `input[data-line="${lineIndex + 1}"][data-col="${colIndex}"]`
+      );
+
+      if (nextInput) nextInput.focus();
+    }
+  }
 
   disableAllArrows() {
     this.isRightArrowDisabled = false;
