@@ -11,14 +11,16 @@ import {
 } from "@angular/forms"
 
 enum MatrixType {
-  SQUARE = "Matriz Quadrada",
-  RECTANGULAR = "Matriz Retangular",
-  DIAGONAL = "Matriz Diagonal",
-  IDENTITY = "Matriz Identidade",
-  NULL = "Matriz Nula",
-  SYMMETRIC = "Matriz Simétrica",
-  UPPER_TRIANGULAR = "Matriz Triangular Superior",
-  LOWER_TRIANGULAR = "Matriz Triangular Inferior",
+  SQUARE = "Quadrada",
+  RECTANGULAR = "Retangular",
+  DIAGONAL = "Diagonal",
+  IDENTITY = "Identidade",
+  NULL = "Nula",
+  SYMMETRIC = "Simétrica",
+  UPPER_TRIANGULAR = "Triangular Superior",
+  LOWER_TRIANGULAR = "Triangular Inferior",
+  ROW = "Linha",
+  COLUMN = "Coluna",
 }
 
 @Component({
@@ -50,13 +52,17 @@ export class MatrizComponent {
     })
   }
 
-  ngOnInit(): void {
-    this.initMatriz(3, 3)
+  ngOnInit(): void {}
+
+  handleFormChange(): void {
+    this.results.clear()
+    this.classifyMatrix()
   }
 
   initMatriz(rows: number, cols: number): void {
     this.matriz = Array.from({ length: rows }, (_, i) =>
       Array.from({ length: cols }, (_, j) => 0)
+      //Array.from({ length: cols }, (_, j) => j + 1 + i * cols)
     )
     this.currentHeight = rows
     this.currentLenght = cols
@@ -139,9 +145,11 @@ export class MatrizComponent {
   }
 
   handleStartMatriz() {
-    this.startMatriz(2)
-    this.currentHeight = 2
-    this.currentLenght = 2
+    this.initMatriz(3, 3)
+    this.matrizForm.valueChanges.subscribe(() => {
+      this.handleFormChange()
+    })
+    this.classifyMatrix()
   }
 
   handleSizeChange(direction: string) {
@@ -170,19 +178,20 @@ export class MatrizComponent {
     this.checkButton()
   }
 
-  removeLeadingZeros(control: AbstractControl) {
-    
+  handleInputChange(control: AbstractControl) {
     if (control.value === null || control.value === "") {
       return null
-      }
+    }
 
     const regex = /^[0-9]*$/
     if (!regex.test(control.value)) {
-      control.setValue(control.value.replace(/[^0-9]/g, ""), { emitEvent: false })
+      control.setValue(control.value.replace(/[^0-9]/g, ""), {
+        emitEvent: false,
+      })
       return
     }
-    
-    const newValue = control.value.replace(/^0+/, "")
+
+    const newValue = control.value.replace(/^0+/, "") || "0"
     control.setValue(newValue, { emitEvent: false })
     return
   }
@@ -236,64 +245,142 @@ export class MatrizComponent {
     this.matrizFormArray.removeAt(this.matriz.length)
   }
 
-  classifyMatrix(matriz: number[][]): MatrixType {
+  results: Set<MatrixType> = new Set()
+
+  transposeMatrix(matriz: number[][], set?: boolean): number[][] {
+    const rows = matriz.length
+    const cols = matriz[0].length
+    const transposed = Array.from({ length: cols }, () => Array(rows).fill(0))
+
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        transposed[j][i] = matriz[i][j]
+      }
+    }
+
+    if (set) {
+      this.matrizFormArray.setValue(transposed);
+    }
+
+    return transposed
+  }
+
+  classifyMatrix() {
+    const matriz = this.matrizFormArray.value
+    if (!matriz || matriz.length === 0 || matriz[0].length === 0) {
+      this.results.clear()
+      this.results.add(MatrixType.NULL)
+      return
+    }
+
     const rows = matriz.length
     const cols = matriz[0].length
 
-    if (rows === cols) {
-      let isNull = true
-      let isDiagonal = true
-      let isIdentity = true
-      let isSymmetric = true
-      let isUpperTriangular = true
-      let isLowerTriangular = true
+    let isNull = true
+    let isDiagonal = true
+    let isIdentity = true
+    let isSymmetric = false
+    let isUpperTriangular = true
+    let isLowerTriangular = true
+    const transposed = this.transposeMatrix(matriz)
 
+    if (rows === cols) {
+      isSymmetric = true
       for (let i = 0; i < rows; i++) {
         for (let j = 0; j < cols; j++) {
-          // Verificar se é uma matriz nula
-          if (matriz[i][j] !== 0) {
-            isNull = false
-          }
-
-          // Verificar se é uma matriz diagonal
-          if (i !== j && matriz[i][j] !== 0) {
-            isDiagonal = false
-          }
-
-          // Verificar se é uma matriz identidade
-          if (
-            (i === j && matriz[i][j] !== 1) ||
-            (i !== j && matriz[i][j] !== 0)
-          ) {
-            isIdentity = false
-          }
-
-          // Verificar se é uma matriz simétrica
-          if (matriz[i][j] !== matriz[j][i]) {
+          if (matriz[i][j] !== transposed[i][j]) {
             isSymmetric = false
-          }
-
-          // Verificar se é uma matriz triangular superior
-          if (i > j && matriz[i][j] !== 0) {
-            isUpperTriangular = false
-          }
-
-          // Verificar se é uma matriz triangular inferior
-          if (i < j && matriz[i][j] !== 0) {
-            isLowerTriangular = false
+            break
           }
         }
       }
+    }
 
-      if (isIdentity) return MatrixType.IDENTITY
-      if (isDiagonal) return MatrixType.DIAGONAL
-      if (isNull) return MatrixType.NULL
-      if (isSymmetric) return MatrixType.SYMMETRIC
-      if (isUpperTriangular) return MatrixType.UPPER_TRIANGULAR
-      if (isLowerTriangular) return MatrixType.LOWER_TRIANGULAR
-      return MatrixType.SQUARE
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        //se value for string, converta para numero
+        if (typeof matriz[i][j] === "string") {
+          matriz[i][j] = parseInt(matriz[i][j])
+        }
+
+        const value = matriz[i][j]
+
+        if (value !== 0) {
+          isNull = false
+        }
+
+        if (i !== j && value !== 0) {
+          isDiagonal = false
+        }
+
+        if (i === j && value !== 1 || i !== j && value !== 0) {
+          isIdentity = false
+        }
+
+        if (i > j && value !== 0) {
+          isLowerTriangular = false
+        }
+        
+        if (i < j && value !== 0) {
+          isUpperTriangular = false
+        }
+      }
+    }
+
+    if (rows === 1) {
+      this.results.add(MatrixType.ROW)
     } else {
-      return MatrixType.RECTANGULAR
+      this.results.delete(MatrixType.ROW)
+    }
+
+    if (cols === 1) {
+      this.results.add(MatrixType.COLUMN)
+    } else {
+      this.results.delete(MatrixType.COLUMN)
+    }
+
+    if (isNull) {
+      this.results.add(MatrixType.NULL)
+    } else {
+      this.results.delete(MatrixType.NULL)
+    }
+
+    if (isDiagonal) {
+      this.results.add(MatrixType.DIAGONAL)
+    } else {
+      this.results.delete(MatrixType.DIAGONAL)
+    }
+
+    if (isIdentity) {
+      this.results.add(MatrixType.IDENTITY)
+    } else {
+      this.results.delete(MatrixType.IDENTITY)
+    }
+
+    if (isSymmetric) {
+      this.results.add(MatrixType.SYMMETRIC)
+    } else {
+      this.results.delete(MatrixType.SYMMETRIC)
+    }
+
+    if (isUpperTriangular) {
+      this.results.add(MatrixType.UPPER_TRIANGULAR)
+    } else {
+      this.results.delete(MatrixType.UPPER_TRIANGULAR)
+    }
+
+    if (isLowerTriangular) {
+      this.results.add(MatrixType.LOWER_TRIANGULAR)
+    } else {
+      this.results.delete(MatrixType.LOWER_TRIANGULAR)
+    }
+
+    if (rows === cols) {
+      this.results.add(MatrixType.SQUARE)
+      this.results.delete(MatrixType.RECTANGULAR)
+    } else {
+      this.results.add(MatrixType.RECTANGULAR)
+      this.results.delete(MatrixType.SQUARE)
     }
   }
 }
