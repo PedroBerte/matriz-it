@@ -1,1 +1,58 @@
-<div class="flex flex-col"><app-matriz-header /> <app-matriz-body /></div>
+<div class="flex">
+
+    <div class="flex flex-col">
+        <div class="w-full">
+            <p class="text-2xl text-white">{{matrizName}}</p>
+        </div>
+
+        <div class="flex flex-row justify-center">
+            <ng-container *ngIf="currentHeight > 0 || currentLenght > 0; else startButtonContainer">
+                <div class="flex flex-row body">
+                    <div>
+                        <form [formGroup]="matrizForm" class="flex flex-col items-center justify-center gap-3">
+                            <div class="flex flex-col " formArrayName="matrizFormArray">
+                                <div [formGroupName]="rowIndex" class="flex gap-3"
+                                    *ngFor="let row of matrizFormArray.controls; let rowIndex = index">
+
+                                    <div class="flex-grow mt-3 min-w-24 h-11 max-w-min"
+                                        *ngFor="let cell of getRowFormArray(rowIndex).controls; let cellIndex = index">
+                                        <input (keydown.enter)="focusNextInput($event, rowIndex, cellIndex)"
+                                            [formControlName]="cellIndex"
+                                            class="flex w-full h-full text-2xl font-semibold text-center text-white rounded-lg bg-zinc-700"
+                                            type="text" [attr.data-line]="rowIndex" [attr.data-col]="cellIndex"
+                                            (input)="removeLeadingZeros(cell)" />
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+
+                        <div class="flex items-center justify-center w-full h-8 gap-5 mt-4">
+                            <app-arrows [isDisabled]="isUpArrowDisabled" (sizeChangeEvent)="handleSizeChange($event)"
+                                direction="arrow-up" />
+                            <app-arrows [isDisabled]="isDownArrowDisabled" (sizeChangeEvent)="handleSizeChange($event)"
+                                direction="arrow-down" />
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center w-full gap-5 mb-8 ml-4">
+                        <app-arrows [isDisabled]="isLeftArrowDisabled" (sizeChangeEvent)="handleSizeChange($event)"
+                            direction="arrow-left" />
+                        <app-arrows [isDisabled]="isRightArrowDisabled" (sizeChangeEvent)="handleSizeChange($event)"
+                            direction="arrow-right" />
+                    </div>
+                </div>
+            </ng-container>
+            <ng-template #startButtonContainer class="flex items-center justify-center"><app-button
+                    (click)="handleStartMatriz()" /></ng-template>
+        </div>
+
+    </div>
+
+    <div class="w-full">
+
+        <button class="flex p-4 text-2xl font-semibold text-center text-white rounded-lg bg-zinc-700 hover:bg-slate-600">
+            <span class="text-2xl text-white">
+                Classificar
+            </span>
+        </button>
+    </div>
+</div>

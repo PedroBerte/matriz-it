@@ -43,12 +43,12 @@ export class MatrizService {
     this.matriz.pop();
   }
 
-  // Método para obter a matriz
+
   getMatriz(): number[][] {
     return this.matriz;
   }
 
-  // Método para definir a matriz
+
   setMatriz(matriz: number[][]): void {
     this.matriz = matriz;
   }

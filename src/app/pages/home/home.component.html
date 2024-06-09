@@ -1,4 +1,4 @@
-<div class="w-full h-screen flex justify-center items-center gap-5">
+<div class="flex items-center justify-center w-full h-screen gap-5">
   <ng-container *ngFor="let route of routes">
       <app-nav-card *ngIf="route.path" [name]="route.title" path="{{route.path}}"></app-nav-card>
   </ng-container>

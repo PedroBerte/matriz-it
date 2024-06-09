@@ -6,9 +6,7 @@ import { AppComponent } from './app.component';
 import { ButtonComponent } from './components/button/button.component';
 import { HeaderComponent } from './components/header/header.component';
 import { MatrizComponent } from './components/matriz/matriz.component';
-import { MatrizHeaderComponent } from './components/matriz/matriz-header/matriz-header.component';
-import { MatrizBodyComponent } from './components/matriz/matriz-body/matriz-body.component';
-import { ArrowsComponent } from './components/matriz/matriz-body/arrows/arrows.component';
+import { ArrowsComponent } from './components/matriz/arrows/arrows.component';
 import { ClassificationsComponent } from './pages/classifications/classifications.component';
 import { OperationsComponent } from './pages/operations/operations.component';
 import { HomeComponent } from './pages/home/home.component';
@@ -24,8 +22,6 @@ import { CommonModule } from '@angular/common';
     ButtonComponent,
     HeaderComponent,
     MatrizComponent,
-    MatrizHeaderComponent,
-    MatrizBodyComponent,
     ArrowsComponent,
     ClassificationsComponent,
     OperationsComponent,
