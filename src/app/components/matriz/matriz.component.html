@@ -2,7 +2,42 @@
     <div class="flex flex-col items-start justify-start flex-1">
         <div class="flex w-full gap-4">
             <p class="text-2xl text-white">{{matrizName}}</p>
-            <button (click)="transposeMatrix(matrizFormArray.value, true)" title="Transpor matriz" class="px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600">(A)<sup>t</sup></button>
+            <button *ngIf="isMatrizStarted" (click)="transposeMatriz(matrizFormArray.value, true)"
+                title="Transpor matriz"
+                class="px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600">(A)<sup>t</sup></button>
+            <button *ngIf="isMatrizStarted" title="Aumentar matriz" (click)="enlargeMatriz(matrizFormArray.value)"
+                class="px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600 fill-zinc-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="" viewBox="0 0 256 256">
+                    <path
+                        d="M136,112H48a8,8,0,0,0-8,8v88a8,8,0,0,0,8,8h88a8,8,0,0,0,8-8V120A8,8,0,0,0,136,112Zm-8,88H56V128h72Zm88-16v16a16,16,0,0,1-16,16H176a8,8,0,0,1,0-16h24V184a8,8,0,0,1,16,0Zm0-72v32a8,8,0,0,1-16,0V112a8,8,0,0,1,16,0Zm0-56V72a8,8,0,0,1-16,0V56H184a8,8,0,0,1,0-16h16A16,16,0,0,1,216,56Zm-64-8a8,8,0,0,1-8,8H112a8,8,0,0,1,0-16h32A8,8,0,0,1,152,48ZM40,80V56A16,16,0,0,1,56,40H72a8,8,0,0,1,0,16H56V80a8,8,0,0,1-16,0Z">
+                    </path>
+                </svg>
+            </button>
+
+            <button *ngIf="isMatrizStarted" title="Preencher tudo com 1" (click)="fillWithOnes(matrizFormArray.value)"
+                class="flex items-center justify-center gap-1 px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600 fill-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span>
+                    [1]
+                </span>
+            </button>
+            <button *ngIf="isMatrizStarted" title="Preencher tudo com 1" (click)="resetMatriz(matrizFormArray.value)"
+                class="flex items-center justify-center gap-1 px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600 fill-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span>
+                    [0]
+                </span>
+            </button>
+            <button *ngIf="isMatrizStarted" [disabled]="matrizFormArray.value.length != matrizFormArray.value[0].length"
+                title="Determinante" (click)="calculateDeterminant(matrizFormArray.value)"
+                class="flex items-center justify-center gap-1 px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600 fill-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="#" viewBox="0 0 256 256">
+                    <path
+                        d="M80,120h96a8,8,0,0,0,8-8V64a8,8,0,0,0-8-8H80a8,8,0,0,0-8,8v48A8,8,0,0,0,80,120Zm8-48h80v32H88ZM200,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V40A16,16,0,0,0,200,24Zm0,192H56V40H200ZM100,148a12,12,0,1,1-12-12A12,12,0,0,1,100,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,148Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,148Zm-80,40a12,12,0,1,1-12-12A12,12,0,0,1,100,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,140,188Zm40,0a12,12,0,1,1-12-12A12,12,0,0,1,180,188Z">
+                    </path>
+                </svg>
+                <span *ngIf="determinant != null">
+                    {{determinant}}
+                </span>
+            </button>
         </div>
 
         <div class="flex items-start justify-start flex-1">
@@ -20,7 +55,7 @@
                                             [formControlName]="cellIndex"
                                             class="flex w-full h-full text-2xl font-semibold text-center text-white rounded-lg bg-zinc-700"
                                             type="text" [attr.data-line]="rowIndex" [attr.data-col]="cellIndex"
-                                            (input)="handleInputChange(cell)" />
+                                            (input)="handleInputChange(cell)" [value]="cell.value" />
                                     </div>
                                 </div>
                             </div>
@@ -48,13 +83,13 @@
     </div>
 
     <div class="flex w-full max-w-lg">
-        <div class="relative flex flex-col w-full">
+        <div *ngIf="isMatrizStarted" class="relative flex flex-col w-full">
             <p class="text-2xl text-white">Classificação</p>
-
+            <p class="text-lg text-white">Sua matriz</p>
             <div class="flex flex-wrap">
-                <div *ngFor="let type of results"
+                <button *ngFor="let type of results" (click)="handleClassificationInfo(type)"
                     class="relative p-4 m-2 text-white duration-300 bg-blue-500 rounded cursor-pointer hover:bg-blue-400">
-                    <div class="absolute top-0 right-0 p-[2px] fill-blue-900">
+                    <div class="absolute top-0 right-0 p-[2px] fill-zinc-300">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="" viewBox="0 0 256 256">
                             <path
                                 d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z">
@@ -62,7 +97,20 @@
                         </svg>
                     </div>
                     {{ type }}
-                </div>
+                </button>
+            </div>
+            <div *ngIf="classificationInfo.length > 2" class="relative p-2 pr-10 mt-3 bg-blue-300 rounded-md">
+                <button *ngIf="isMatrizStarted" title="Fechar explicação" (click)="classificationInfo = ''"
+                    class="absolute top-1 right-1 p-[2px] duration-300 bg-blue-400 rounded-lg text-zinc-200 hover:bg-blue-500 fill-zinc-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="" viewBox="0 0 256 256">
+                        <path
+                            d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z">
+                        </path>
+                    </svg>
+                </button>
+                <span class="">
+                    {{ classificationInfo }}
+                </span>
             </div>
         </div>
     </div>

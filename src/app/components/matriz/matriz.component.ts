@@ -1,4 +1,4 @@
-import { Component, ElementRef } from "@angular/core"
+import { Component, ElementRef, LOCALE_ID } from "@angular/core"
 import { MatrizService } from "../../services/matriz.service"
 import {
   AbstractControl,
@@ -10,7 +10,7 @@ import {
   Validators,
 } from "@angular/forms"
 
-enum MatrixType {
+enum MatrizType {
   SQUARE = "Quadrada",
   RECTANGULAR = "Retangular",
   DIAGONAL = "Diagonal",
@@ -23,9 +23,28 @@ enum MatrixType {
   COLUMN = "Coluna",
 }
 
+enum MatrizExplanation {
+  SQUARE = "Uma matriz quadrada possui o mesmo número de linhas e colunas.",
+  RECTANGULAR = "Uma matriz retangular possui um número diferente de linhas e colunas.",
+  DIAGONAL = "Uma matriz diagonal possui zeros em todas as posições fora da diagonal principal.",
+  IDENTITY = "Uma matriz identidade é uma matriz diagonal com todos os elementos da diagonal principal iguais a 1.",
+  NULL = "Uma matriz nula possui todos os elementos iguais a zero.",
+  SYMMETRIC = "Uma matriz simétrica é igual à sua transposta.",
+  UPPER_TRIANGULAR = "Uma matriz triangular superior possui todos os elementos abaixo da diagonal principal iguais a zero.",
+  LOWER_TRIANGULAR = "Uma matriz triangular inferior possui todos os elementos acima da diagonal principal iguais a zero.",
+  ROW = "Uma matriz de uma linha possui apenas uma linha.",
+  COLUMN = "Uma matriz de uma coluna possui apenas uma coluna.",
+}
+
+import localePt from "@angular/common/locales/pt"
+import { registerLocaleData } from "@angular/common"
+
+registerLocaleData(localePt)
+
 @Component({
   selector: "app-matriz",
   templateUrl: "./matriz.component.html",
+  providers: [{ provide: LOCALE_ID, useValue: "pt" }],
 })
 export class MatrizComponent {
   matrizName = "Matriz"
@@ -43,8 +62,11 @@ export class MatrizComponent {
   isLeftArrowDisabled = false
   isDownArrowDisabled = false
   isUpArrowDisabled = false
+  isMatrizStarted: boolean = false
 
   matrizForm: FormGroup
+
+  determinant: null | number = null
 
   constructor(private formBuilder: FormBuilder, private elRef: ElementRef) {
     this.matrizForm = this.formBuilder.group({
@@ -56,17 +78,57 @@ export class MatrizComponent {
 
   handleFormChange(): void {
     this.results.clear()
-    this.classifyMatrix()
+    this.classifyMatriz()
+    this.determinant = null
   }
 
   initMatriz(rows: number, cols: number): void {
-    this.matriz = Array.from({ length: rows }, (_, i) =>
-      Array.from({ length: cols }, (_, j) => 0)
+    this.matriz = Array.from(
+      { length: rows },
+      (_, i) => Array.from({ length: cols }, (_, j) => 0)
       //Array.from({ length: cols }, (_, j) => j + 1 + i * cols)
     )
     this.currentHeight = rows
     this.currentLenght = cols
     this.updateFormArray()
+  }
+
+  classificationInfo: string = ""
+  handleClassificationInfo(type: MatrizType) {
+    switch (type) {
+      case MatrizType.SQUARE:
+        this.classificationInfo = MatrizExplanation.SQUARE
+        break
+      case MatrizType.RECTANGULAR:
+        this.classificationInfo = MatrizExplanation.RECTANGULAR
+        break
+      case MatrizType.DIAGONAL:
+        this.classificationInfo = MatrizExplanation.DIAGONAL
+        break
+      case MatrizType.IDENTITY:
+        this.classificationInfo = MatrizExplanation.IDENTITY
+        break
+      case MatrizType.NULL:
+        this.classificationInfo = MatrizExplanation.NULL
+        break
+      case MatrizType.SYMMETRIC:
+        this.classificationInfo = MatrizExplanation.SYMMETRIC
+        break
+      case MatrizType.UPPER_TRIANGULAR:
+        this.classificationInfo = MatrizExplanation.UPPER_TRIANGULAR
+        break
+      case MatrizType.LOWER_TRIANGULAR:
+        this.classificationInfo = MatrizExplanation.LOWER_TRIANGULAR
+        break
+      case MatrizType.ROW:
+        this.classificationInfo = MatrizExplanation.ROW
+        break
+      case MatrizType.COLUMN:
+        this.classificationInfo = MatrizExplanation.COLUMN
+        break
+      default:
+        this.classificationInfo = ""
+    }
   }
 
   get matrizFormArray(): FormArray {
@@ -149,7 +211,8 @@ export class MatrizComponent {
     this.matrizForm.valueChanges.subscribe(() => {
       this.handleFormChange()
     })
-    this.classifyMatrix()
+    this.classifyMatriz()
+    this.isMatrizStarted = true
   }
 
   handleSizeChange(direction: string) {
@@ -179,21 +242,21 @@ export class MatrizComponent {
   }
 
   handleInputChange(control: AbstractControl) {
-    if (control.value === null || control.value === "") {
-      return null
-    }
+    // Regex para validar números inteiros positivos ou negativos
+    const regex = /^-?\d*$/
 
-    const regex = /^[0-9]*$/
+    // Verifica se o valor do controle corresponde à expressão regular
     if (!regex.test(control.value)) {
-      control.setValue(control.value.replace(/[^0-9]/g, ""), {
+      // Remove todos os caracteres que não são dígitos ou o sinal de menos (para números negativos)
+      control.setValue(control.value.replace(/[^-\d]/g, ""), {
         emitEvent: false,
       })
       return
     }
 
-    const newValue = control.value.replace(/^0+/, "") || "0"
+    // Remove zeros à esquerda, exceto se o número for zero absoluto
+    const newValue = control.value.replace(/^(-?)0+(?=\d)|^(-?)0+(?=$)/, "$1$2")
     control.setValue(newValue, { emitEvent: false })
-    return
   }
 
   startMatriz(size: number) {
@@ -245,9 +308,9 @@ export class MatrizComponent {
     this.matrizFormArray.removeAt(this.matriz.length)
   }
 
-  results: Set<MatrixType> = new Set()
+  results: Set<MatrizType> = new Set()
 
-  transposeMatrix(matriz: number[][], set?: boolean): number[][] {
+  transposeMatriz(matriz: number[][], set?: boolean): number[][] {
     const rows = matriz.length
     const cols = matriz[0].length
     const transposed = Array.from({ length: cols }, () => Array(rows).fill(0))
@@ -259,17 +322,89 @@ export class MatrizComponent {
     }
 
     if (set) {
-      this.matrizFormArray.setValue(transposed);
+      this.matrizFormArray.setValue(transposed)
     }
 
     return transposed
   }
 
-  classifyMatrix() {
+  fillWithOnes(matriz: number[][]) {
+    const rows = matriz.length
+    const cols = matriz[0].length
+
+    const ones = Array.from({ length: rows }, () => Array(cols).fill(1))
+
+    this.matrizFormArray.setValue(ones)
+  }
+
+
+  resetMatriz(matriz: number[][]) {
+    const rows = matriz.length
+    const cols = matriz[0].length
+
+    const empty = Array.from({ length: cols }, () => Array(rows).fill(0))
+
+    this.matrizFormArray.setValue(empty)
+  }
+
+  enlargeMatriz(matriz: number[][]) {
+    const rows = matriz.length
+    const cols = matriz[0].length
+
+    let targetHeight = 8
+    let targetWidth = 8
+
+    if (rows <= 8 || cols <= 8) {
+      for (let i = rows; i < targetHeight; i++) {
+        this.incrementVertical()
+      }
+      for (let i = cols; i < targetWidth; i++) {
+        this.incrementHorizontal()
+      }
+    }
+    this.currentHeight = targetHeight
+    this.currentLenght = targetWidth
+  }
+
+  calculateDeterminant(matriz: number[][]): number {
+    if (matriz.length !== matriz[0].length) {
+      return 0
+    }
+
+    const size = matriz.length
+
+    if (size === 1) {
+      return matriz[0][0]
+    }
+
+    if (size === 2) {
+      return matriz[0][0] * matriz[1][1] - matriz[0][1] * matriz[1][0]
+    }
+
+    for (let j = 0; j < size; j++) {
+      const cofactor = matriz[0][j] * this.calculateCofactor(matriz, 0, j)
+
+      this.determinant! += (j % 2 === 0 ? 1 : -1) * cofactor
+    }
+
+    return this.determinant!
+  }
+
+  calculateCofactor(matriz: number[][], row: number, col: number): number {
+    const subMatriz = []
+
+    for (let i = 1; i < matriz.length; i++) {
+      subMatriz.push(matriz[i].filter((_, index) => index !== col))
+    }
+
+    return this.calculateDeterminant(subMatriz)
+  }
+
+  classifyMatriz() {
     const matriz = this.matrizFormArray.value
     if (!matriz || matriz.length === 0 || matriz[0].length === 0) {
       this.results.clear()
-      this.results.add(MatrixType.NULL)
+      this.results.add(MatrizType.NULL)
       return
     }
 
@@ -282,7 +417,7 @@ export class MatrizComponent {
     let isSymmetric = false
     let isUpperTriangular = true
     let isLowerTriangular = true
-    const transposed = this.transposeMatrix(matriz)
+    const transposed = this.transposeMatriz(matriz)
 
     if (rows === cols) {
       isSymmetric = true
@@ -298,7 +433,6 @@ export class MatrizComponent {
 
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
-        //se value for string, converta para numero
         if (typeof matriz[i][j] === "string") {
           matriz[i][j] = parseInt(matriz[i][j])
         }
@@ -313,14 +447,14 @@ export class MatrizComponent {
           isDiagonal = false
         }
 
-        if (i === j && value !== 1 || i !== j && value !== 0) {
+        if ((i === j && value !== 1) || (i !== j && value !== 0)) {
           isIdentity = false
         }
 
         if (i > j && value !== 0) {
           isLowerTriangular = false
         }
-        
+
         if (i < j && value !== 0) {
           isUpperTriangular = false
         }
@@ -328,59 +462,59 @@ export class MatrizComponent {
     }
 
     if (rows === 1) {
-      this.results.add(MatrixType.ROW)
+      this.results.add(MatrizType.ROW)
     } else {
-      this.results.delete(MatrixType.ROW)
+      this.results.delete(MatrizType.ROW)
     }
 
     if (cols === 1) {
-      this.results.add(MatrixType.COLUMN)
+      this.results.add(MatrizType.COLUMN)
     } else {
-      this.results.delete(MatrixType.COLUMN)
+      this.results.delete(MatrizType.COLUMN)
     }
 
     if (isNull) {
-      this.results.add(MatrixType.NULL)
+      this.results.add(MatrizType.NULL)
     } else {
-      this.results.delete(MatrixType.NULL)
+      this.results.delete(MatrizType.NULL)
     }
 
     if (isDiagonal) {
-      this.results.add(MatrixType.DIAGONAL)
+      this.results.add(MatrizType.DIAGONAL)
     } else {
-      this.results.delete(MatrixType.DIAGONAL)
+      this.results.delete(MatrizType.DIAGONAL)
     }
 
     if (isIdentity) {
-      this.results.add(MatrixType.IDENTITY)
+      this.results.add(MatrizType.IDENTITY)
     } else {
-      this.results.delete(MatrixType.IDENTITY)
+      this.results.delete(MatrizType.IDENTITY)
     }
 
     if (isSymmetric) {
-      this.results.add(MatrixType.SYMMETRIC)
+      this.results.add(MatrizType.SYMMETRIC)
     } else {
-      this.results.delete(MatrixType.SYMMETRIC)
+      this.results.delete(MatrizType.SYMMETRIC)
     }
 
     if (isUpperTriangular) {
-      this.results.add(MatrixType.UPPER_TRIANGULAR)
+      this.results.add(MatrizType.UPPER_TRIANGULAR)
     } else {
-      this.results.delete(MatrixType.UPPER_TRIANGULAR)
+      this.results.delete(MatrizType.UPPER_TRIANGULAR)
     }
 
     if (isLowerTriangular) {
-      this.results.add(MatrixType.LOWER_TRIANGULAR)
+      this.results.add(MatrizType.LOWER_TRIANGULAR)
     } else {
-      this.results.delete(MatrixType.LOWER_TRIANGULAR)
+      this.results.delete(MatrizType.LOWER_TRIANGULAR)
     }
 
     if (rows === cols) {
-      this.results.add(MatrixType.SQUARE)
-      this.results.delete(MatrixType.RECTANGULAR)
+      this.results.add(MatrizType.SQUARE)
+      this.results.delete(MatrizType.RECTANGULAR)
     } else {
-      this.results.add(MatrixType.RECTANGULAR)
-      this.results.delete(MatrixType.SQUARE)
+      this.results.add(MatrizType.RECTANGULAR)
+      this.results.delete(MatrizType.SQUARE)
     }
   }
 }
