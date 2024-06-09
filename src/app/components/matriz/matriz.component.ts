@@ -368,37 +368,43 @@ export class MatrizComponent {
 
   calculateDeterminant(matriz: number[][]): number {
     if (matriz.length !== matriz[0].length) {
-      return 0
+        return 0;
     }
 
-    const size = matriz.length
+    const size = matriz.length;
 
     if (size === 1) {
-      return matriz[0][0]
+        return matriz[0][0];
     }
 
     if (size === 2) {
-      return matriz[0][0] * matriz[1][1] - matriz[0][1] * matriz[1][0]
+        return matriz[0][0] * matriz[1][1] - matriz[0][1] * matriz[1][0];
     }
+
+    this.determinant = 0;
 
     for (let j = 0; j < size; j++) {
-      const cofactor = matriz[0][j] * this.calculateCofactor(matriz, 0, j)
-
-      this.determinant! += (j % 2 === 0 ? 1 : -1) * cofactor
+      this.determinant += matriz[0][j] * this.calculateCofactor(matriz, 0, j) * (j % 2 === 0 ? 1 : -1);
     }
 
-    return this.determinant!
-  }
+    return this.determinant;
+}
 
-  calculateCofactor(matriz: number[][], row: number, col: number): number {
-    const subMatriz = []
+calculateCofactor(matriz: number[][], row: number, col: number): number {
+    const subMatriz: number[][] = [];
 
     for (let i = 1; i < matriz.length; i++) {
-      subMatriz.push(matriz[i].filter((_, index) => index !== col))
+        const newRow: number[] = [];
+        for (let j = 0; j < matriz[i].length; j++) {
+            if (j !== col) {
+                newRow.push(matriz[i][j]);
+            }
+        }
+        subMatriz.push(newRow);
     }
 
-    return this.calculateDeterminant(subMatriz)
-  }
+    return this.calculateDeterminant(subMatriz);
+}
 
   classifyMatriz() {
     const matriz = this.matrizFormArray.value
