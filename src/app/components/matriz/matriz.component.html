@@ -5,7 +5,7 @@
             <button *ngIf="isMatrizStarted" (click)="transposeMatriz(matrizFormArray.value, true)"
                 title="Transpor matriz"
                 class="px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600">(A)<sup>t</sup></button>
-            <button *ngIf="isMatrizStarted" title="Aumentar matriz" (click)="enlargeMatriz(matrizFormArray.value)"
+            <button *ngIf="isMatrizStarted" title="Ajustar tamanho da matriz" (click)="enlargeMatriz(matrizFormArray.value)"
                 class="px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600 fill-zinc-200">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="" viewBox="0 0 256 256">
                     <path
@@ -20,7 +20,7 @@
                     [1]
                 </span>
             </button>
-            <button *ngIf="isMatrizStarted" title="Preencher tudo com 1" (click)="resetMatriz(matrizFormArray.value)"
+            <button *ngIf="isMatrizStarted" title="Preencher tudo com 0" (click)="resetMatriz(matrizFormArray.value)"
                 class="flex items-center justify-center gap-1 px-2 duration-300 rounded-lg bg-zinc-700 text-zinc-200 hover:bg-slate-600 fill-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 <span>
                     [0]
